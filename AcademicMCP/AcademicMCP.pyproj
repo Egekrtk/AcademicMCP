@@ -903,6 +903,7 @@
     <Content Include="env\Scripts\python.exe" />
     <Content Include="env\Scripts\pythonw.exe" />
     <Content Include="requirements.txt" />
+    <Content Include="static\index.html" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="env\" />
@@ -1013,6 +1014,7 @@
     <Folder Include="env\Lib\site-packages\pip\_vendor\__pycache__\" />
     <Folder Include="env\Lib\site-packages\pip\__pycache__\" />
     <Folder Include="env\Scripts\" />
+    <Folder Include="static\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
