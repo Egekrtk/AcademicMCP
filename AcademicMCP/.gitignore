@@ -1,0 +1,15 @@
+﻿
+# Gizli anahtarlar
+.env
+
+# Python çalışma dosyaları
+__pycache__/
+*.pyc
+env/
+venv/
+.venv
+
+# Visual Studio dosyaları
+.vs/
+bin/
+obj/
