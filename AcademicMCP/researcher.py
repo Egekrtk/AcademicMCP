@@ -1,12 +1,19 @@
 ﻿import requests
 import xml.etree.ElementTree as ET
-import fitz  # PyMuPDF
+import fitz
 import io
 import time
 
 def search_arxiv(query, max_results=3):
+    # ArXiv Türkçe anlamaz, bu yüzden sorguyu temizleyip anahtar kelimelere odaklanıyoruz.
+    # Eğer kullanıcı Türkçe yazarsa, sistem temel anahtar kelimeleri seçmeye çalışır.
+    # Tavsiye: Kullanıcıya İngilizce arama yapmasını hatırlatabilirsin.
+    
+    clean_query = query.replace("istiyorum", "").replace("yapmak", "").replace("hakkında", "")
+    
     base_url = "http://export.arxiv.org/api/query?"
-    params = f"search_query=all:{query}&start=0&max_results={max_results}"
+    # Arama parametresini daha spesifik hale getirdik
+    params = f"search_query=all:{clean_query}&start=0&max_results={max_results}&sortBy=relevance"
     
     try:
         response = requests.get(base_url + params)
@@ -23,34 +30,32 @@ def search_arxiv(query, max_results=3):
                 if link.get('title') == 'pdf' or link.get('type') == 'application/pdf':
                     pdf_url = link.get('href')
             
+            # Eğer link /abs/ ise /pdf/'e çevir
+            if pdf_url and "/abs/" in pdf_url:
+                pdf_url = pdf_url.replace("/abs/", "/pdf/")
+
             papers.append({
                 "title": title,
                 "abstract": summary,
-                "pdf_url": pdf_url,
-                "source": "arXiv"
+                "pdf_url": pdf_url
             })
         return papers
     except Exception as e:
-        print(f"Hata: {e}")
+        print(f"ArXiv Hatası: {e}")
         return []
 
 def extract_text_from_pdf(pdf_url):
-    if not pdf_url:
-        return None
+    if not pdf_url: return None
     try:
-        # ArXiv linklerini düzelt
-        if "arxiv.org/pdf/" in pdf_url and not pdf_url.endswith(".pdf"):
-            pdf_url += ".pdf"
+        if not pdf_url.endswith(".pdf"): pdf_url += ".pdf"
         
-        time.sleep(1) # Nezaket beklemesi
-        response = requests.get(pdf_url, timeout=20)
-        response.raise_for_status()
-        
+        response = requests.get(pdf_url, timeout=15)
         with fitz.open(stream=io.BytesIO(response.content), filetype="pdf") as doc:
             text = ""
-            # Tüm sayfaları oku
-            for page in doc:
+            # Render ücretsiz planında CPU limitine takılmamak için 
+            # tüm sayfalar yerine ilk 15 sayfayı alalım (genelde yeterlidir)
+            for page in doc[:15]:
                 text += page.get_text()
             return text
     except Exception as e:
-        return f"Metin çıkarılamadı: {str(e)}"
+        return f"PDF Okuma Hatası: {str(e)}"
