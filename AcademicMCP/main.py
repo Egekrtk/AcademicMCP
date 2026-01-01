@@ -1,7 +1,6 @@
-﻿
-from fastapi import FastAPI
-from researcher import search_academic_papers, extract_text_from_pdf
-from analyzer import analyze_research
+﻿from fastapi import FastAPI
+from researcher import search_arxiv, extract_text_from_pdf
+from analyzer import analyze_research_with_gemini # İsim düzeltildi
 import uvicorn
 
 app = FastAPI()
@@ -9,16 +8,17 @@ app = FastAPI()
 @app.get("/research")
 async def start_research(query: str):
     # 1. Makaleleri bul
-    papers = search_academic_papers(query)
+    papers = search_arxiv(query)
     
-    # 2. Ücretsiz olanların tam metnini çek
+    # 2. PDF içeriğini çek (researcher.py'daki yapıya göre güncellendi)
     for paper in papers:
-        if paper.get('isOpenAccess') and paper.get('openAccessPdf'):
-            pdf_url = paper['openAccessPdf']['url']
-            paper['full_text'] = extract_text_from_pdf(pdf_url)
+        if paper.get('pdf_url'):
+            print(f"İçerik çekiliyor: {paper['title']}")
+            # researcher.py'daki fonksiyonu çağırıyoruz
+            paper['full_text'] = extract_text_from_pdf(paper['pdf_url'])
     
     # 3. Gemini ile analiz et
-    analysis_result = analyze_research(query, papers)
+    analysis_result = analyze_research_with_gemini(query, papers)
     
     return {
         "topic": query,
